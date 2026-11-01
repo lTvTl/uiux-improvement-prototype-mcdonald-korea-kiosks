@@ -111,12 +111,15 @@
       <!-- [화면 1] 시작 화면 (Screen 1: Start Screen) -->
       <!-- ============================================== -->
       <section id="screen-start" class="screen-view flex-1 flex flex-col justify-between p-6">
-        <!-- 상단 프로모션 배너 -->
-        <div onclick="goToScreen('screen-order-type')" class="cursor-pointer bg-gradient-to-r from-red-700 to-mcdRed text-white rounded-3xl p-5 shadow-md border-2 border-red-500 flex items-center justify-between hover:brightness-105 transition">
+        <!-- 상단 프로모션 배너 (광고 터치 시 해당 메뉴 '빅맥 세트' 선택 모달로 즉시 직행) -->
+        <div onclick="clickPromoBanner()" class="cursor-pointer bg-gradient-to-r from-red-700 to-mcdRed text-white rounded-3xl p-5 shadow-md border-2 border-red-500 flex items-center justify-between hover:brightness-105 active:scale-98 transition">
           <div>
-            <span class="bg-mcdYellow text-neutral-900 text-xs font-black px-2.5 py-0.5 rounded-full">인기 메뉴</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="bg-mcdYellow text-neutral-900 text-xs font-black px-2.5 py-0.5 rounded-full">인기 메뉴</span>
+              <span class="text-xs text-yellow-200 font-bold">👆 터치 시 바로 주문</span>
+            </div>
             <h2 class="text-2xl font-black mt-1">갓 구운 빅맥®</h2>
-            <p class="text-xs text-red-100 mt-0.5">누구나 맛있고 든든하게 즐기는 한 끼!</p>
+            <p class="text-xs text-red-100 mt-0.5">광고를 누르면 빅맥® 세트 선택 창으로 바로 이동합니다</p>
           </div>
           <div class="text-6xl text-yellow-300 drop-shadow">🍔</div>
         </div>
@@ -1085,6 +1088,22 @@
       selectedOrderType = type;
       document.getElementById('orderProgressStatus').innerText = `주문 진행 중 (${type})`;
       goToScreen('screen-menu-list');
+    }
+
+    // ★ [요청 반영] 상단 광고 배너 클릭 시 광고 메뉴(빅맥 세트) 선택으로 바로 이동
+    function clickPromoBanner() {
+      playBeep(580, 0.12);
+      selectedOrderType = '매장에서 식사';
+      document.getElementById('orderProgressStatus').innerText = '주문 진행 중 (매장에서 식사)';
+      
+      currentCategory = 'sets';
+      goToScreen('screen-menu-list');
+
+      // 광고에 나온 '빅맥® 세트' 상세 옵션 모달을 즉시 오픈!
+      const bigmacItem = MENU_DATA.sets.find(item => item.id === 'bigmac_set') || MENU_DATA.sets[0];
+      setTimeout(() => {
+        openItemDetailModal(bigmacItem, true);
+      }, 120);
     }
 
     // 카테고리 전환
