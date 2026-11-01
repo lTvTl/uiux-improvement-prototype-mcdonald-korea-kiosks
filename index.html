@@ -49,6 +49,7 @@
     .animate-bounce-subtle {
       animation: bounce-subtle 1.8s infinite ease-in-out;
     }
+    /* 카드 삽입 애니메이션 */
     @keyframes insert-card {
       0% { transform: translateY(0); opacity: 1; }
       50% { transform: translateY(-40px); opacity: 1; }
@@ -110,7 +111,7 @@
       <!-- [화면 1] 시작 화면 (Screen 1: Start Screen) -->
       <!-- ============================================== -->
       <section id="screen-start" class="screen-view flex-1 flex flex-col justify-between p-6">
-        <!-- 상단 프로모션 배너 (클릭 시에도 추천 세트로 직행) -->
+        <!-- 상단 프로모션 배너 -->
         <div onclick="goToScreen('screen-order-type')" class="cursor-pointer bg-gradient-to-r from-red-700 to-mcdRed text-white rounded-3xl p-5 shadow-md border-2 border-red-500 flex items-center justify-between hover:brightness-105 transition">
           <div>
             <span class="bg-mcdYellow text-neutral-900 text-xs font-black px-2.5 py-0.5 rounded-full">인기 메뉴</span>
@@ -206,10 +207,10 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- [화면 3] 메뉴 선택 화면 (모든 탭 & 모든 카드 활성화) -->
+      <!-- [화면 3] 메뉴 선택 화면 (모든 카테고리 & 카드 활성화) -->
       <!-- ============================================== -->
       <section id="screen-menu-list" class="screen-view hidden flex-1 flex flex-col justify-between">
-        <!-- 4대 카테고리 탭 (클릭 시 실시간 메뉴 변경) -->
+        <!-- 4대 카테고리 탭 -->
         <div class="bg-white border-b border-neutral-200 px-3 py-2 flex space-x-2 overflow-x-auto no-scrollbar">
           <button id="tab-sets" onclick="switchCategory('sets')" class="category-tab px-5 py-2.5 bg-mcdRed text-white font-black text-base rounded-xl shadow whitespace-nowrap transition">
             세트 메뉴
@@ -242,7 +243,6 @@
             <i class="fas fa-arrow-left"></i>
             <span>이전</span>
           </button>
-          <!-- 클릭 시 장바구니로 바로 이동 가능하도록 기능 추가! -->
           <div onclick="goToCartFromBottom()" class="w-2/3 h-14 bg-neutral-100 hover:bg-amber-50 border-2 border-neutral-300 hover:border-amber-400 rounded-2xl flex items-center justify-between px-4 cursor-pointer transition shadow-sm">
             <div class="flex items-center space-x-2">
               <i class="fas fa-shopping-cart text-neutral-600"></i>
@@ -255,7 +255,7 @@
 
       <!-- ============================================== -->
       <!-- [화면 4 모달] 메뉴 세부 구성 & 옵션 변경 모달 -->
-      <!-- 사이드 변경 + 음료 변경 완전 지원 -->
+      <!-- 🍔 버거 속재료(토핑) 변경 + 사이드 + 음료 변경 지원! -->
       <!-- ============================================== -->
       <div id="optionModal" class="hidden fixed inset-0 bg-black/60 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
@@ -278,13 +278,44 @@
               </div>
             </div>
 
-            <!-- 세트 메뉴일 때만 표시되는 옵션들 (단품일 때는 숨김) -->
+            <!-- ★ [신규 기능] 버거 속재료 (토핑) 맞춤 변경 블록 (버거류일 때 표시) -->
+            <div id="toppingOptionsBlock" class="bg-emerald-50 border-3 border-emerald-500 rounded-2xl p-4 shadow-sm space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="bg-emerald-700 text-white text-xs font-black px-2 py-0.5 rounded">속재료 선택</span>
+                  <span class="text-lg font-black text-neutral-900">버거 토핑 변경</span>
+                </div>
+                <span class="text-xs font-black text-emerald-800 bg-emerald-200 px-2.5 py-0.5 rounded-full">
+                  추가 / 빼기 가능
+                </span>
+              </div>
+
+              <!-- 현재 선택된 토핑 상태 요약 -->
+              <div class="bg-white border-2 border-neutral-300 rounded-xl p-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <span class="text-3xl">🥬</span>
+                  <div>
+                    <span class="text-xs text-neutral-500 font-medium">현재 토핑 선택</span>
+                    <h5 id="currentToppingSummary" class="text-sm font-black text-neutral-900">기본 구성 (변경 없음)</h5>
+                  </div>
+                </div>
+                <span id="currentToppingPriceDiff" class="text-sm font-black text-neutral-800">+0원</span>
+              </div>
+
+              <!-- 토핑 변경 팝업 열기 버튼 -->
+              <button onclick="openToppingModal()" class="w-full h-14 bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white rounded-xl font-black text-base flex items-center justify-center space-x-2 shadow-md transition">
+                <i class="fas fa-sliders-h"></i>
+                <span>버거 속재료 변경하기 (치즈/토마토/피클 등)</span>
+              </button>
+            </div>
+
+            <!-- 세트 메뉴일 때만 표시되는 사이드 & 음료 블록 -->
             <div id="setOptionsBlock" class="space-y-4">
-              <!-- 1. 사이드 메뉴 변경 블록 (200% 확대 & 강조 테두리) -->
+              <!-- 1. 사이드 메뉴 변경 블록 (200% 확대) -->
               <div class="bg-amber-50 border-4 border-amber-500 rounded-2xl p-4 shadow-md space-y-3">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
-                    <span class="bg-mcdRed text-white text-xs font-black px-2 py-0.5 rounded">선택 1</span>
+                    <span class="bg-mcdRed text-white text-xs font-black px-2 py-0.5 rounded">세트 구성 1</span>
                     <span class="text-lg font-black text-neutral-900">함께 먹는 메뉴</span>
                   </div>
                   <span class="text-xs font-black text-amber-900 bg-amber-200 px-2.5 py-0.5 rounded-full">
@@ -303,18 +334,17 @@
                   <span id="currentSidePriceDiff" class="text-sm font-black text-neutral-800">+0원</span>
                 </div>
 
-                <!-- 다른 메뉴로 바꾸기 버튼 -->
                 <button onclick="openSideSelectModal()" class="w-full h-14 bg-amber-400 hover:bg-yellow-400 active:scale-98 border-2 border-amber-600 rounded-xl font-black text-base text-neutral-950 flex items-center justify-center space-x-2 shadow-md transition">
                   <i class="fas fa-exchange-alt text-lg text-neutral-900"></i>
                   <span>다른 메뉴로 바꾸기 (치즈스틱 등)</span>
                 </button>
               </div>
 
-              <!-- 2. 음료 변경 블록 (기능 추가!) -->
+              <!-- 2. 음료 변경 블록 -->
               <div class="bg-neutral-50 border-3 border-neutral-300 rounded-2xl p-4 shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
-                    <span class="bg-neutral-700 text-white text-xs font-black px-2 py-0.5 rounded">선택 2</span>
+                    <span class="bg-neutral-700 text-white text-xs font-black px-2 py-0.5 rounded">세트 구성 2</span>
                     <span class="text-lg font-black text-neutral-900">음료 선택</span>
                   </div>
                   <span class="text-xs font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded-full">
@@ -333,10 +363,9 @@
                   <span id="currentDrinkPriceDiff" class="text-sm font-black text-neutral-800">+0원</span>
                 </div>
 
-                <!-- 음료 바꾸기 버튼 -->
                 <button onclick="openDrinkSelectModal()" class="w-full h-12 bg-white hover:bg-neutral-100 active:scale-98 border-2 border-neutral-400 rounded-xl font-black text-sm text-neutral-800 flex items-center justify-center space-x-2 shadow-sm transition">
                   <i class="fas fa-wine-bottle text-neutral-600"></i>
-                  <span>다른 음료로 바꾸기 (제로콜라, 주스 등)</span>
+                  <span>다른 음료로 바꾸기 (제로콜라, 커피 등)</span>
                 </button>
               </div>
             </div>
@@ -366,6 +395,145 @@
             <button onclick="addToCartAndGoNext()" class="w-full h-16 bg-mcdGreen hover:bg-emerald-700 active:scale-98 text-white rounded-2xl font-black text-xl flex items-center justify-center space-x-2 shadow-lg transition">
               <i class="fas fa-shopping-cart"></i>
               <span>이 구성으로 장바구니에 담기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- [★ 신규 서브 모달] 햄버거 토핑(속재료) 변경 모달 -->
+      <!-- 재료 추가 & 재료 빼기 다중 선택 지원 -->
+      <!-- ============================================== -->
+      <div id="toppingModal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white rounded-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+          <!-- 모달 헤더 -->
+          <div class="bg-emerald-600 text-white px-5 py-3.5 flex justify-between items-center">
+            <div>
+              <span class="text-xs font-black bg-white/20 px-2 py-0.5 rounded-full">버거 맞춤 조리</span>
+              <h4 class="text-lg font-black mt-0.5">버거 속재료(토핑) 변경</h4>
+            </div>
+            <button onclick="closeToppingModal()" class="text-white hover:text-emerald-200">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <!-- 토핑 옵션 리스트 -->
+          <div class="p-5 overflow-y-auto no-scrollbar space-y-4">
+            <!-- 1. 재료 추가하기 섹션 -->
+            <div class="space-y-2">
+              <h5 class="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center space-x-1">
+                <i class="fas fa-plus-circle"></i>
+                <span>재료 추가하기 (더 맛있게)</span>
+              </h5>
+
+              <!-- 치즈 추가 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-emerald-500 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="top_cheese" value="300" onchange="calcToppingSelections()" class="w-5 h-5 accent-emerald-600 rounded">
+                  <span class="text-2xl">🧀</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">체다 치즈 1장 추가</span>
+                    <span class="text-xs text-neutral-500">고소하고 진한 치즈 풍미</span>
+                  </div>
+                </div>
+                <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded">+300원</span>
+              </label>
+
+              <!-- 토마토 추가 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-emerald-500 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="top_tomato" value="400" onchange="calcToppingSelections()" class="w-5 h-5 accent-emerald-600 rounded">
+                  <span class="text-2xl">🍅</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">신선한 토마토 1장 추가</span>
+                    <span class="text-xs text-neutral-500">상큼하고 촉촉한 토마토 슬라이스</span>
+                  </div>
+                </div>
+                <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded">+400원</span>
+              </label>
+
+              <!-- 베이컨 추가 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-emerald-500 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="top_bacon" value="600" onchange="calcToppingSelections()" class="w-5 h-5 accent-emerald-600 rounded">
+                  <span class="text-2xl">🥓</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">바삭한 베이컨 2장 추가</span>
+                    <span class="text-xs text-neutral-500">훈제향 가득한 바삭한 베이컨</span>
+                  </div>
+                </div>
+                <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded">+600원</span>
+              </label>
+
+              <!-- 패티 추가 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-emerald-500 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="top_patty" value="1500" onchange="calcToppingSelections()" class="w-5 h-5 accent-emerald-600 rounded">
+                  <span class="text-2xl">🥩</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">순 쇠고기 패티 1장 추가</span>
+                    <span class="text-xs text-neutral-500">육즙 가득한 소고기 패티</span>
+                  </div>
+                </div>
+                <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded">+1,500원</span>
+              </label>
+            </div>
+
+            <!-- 2. 재료 빼기 섹션 -->
+            <div class="space-y-2 pt-2 border-t border-neutral-200">
+              <h5 class="text-xs font-black text-red-700 uppercase tracking-wider flex items-center space-x-1">
+                <i class="fas fa-minus-circle"></i>
+                <span>재료 빼기 (안 드시는 재료 제외)</span>
+              </h5>
+
+              <!-- 피클 빼기 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-red-400 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="sub_pickle" onchange="calcToppingSelections()" class="w-5 h-5 accent-red-600 rounded">
+                  <span class="text-2xl">🥒</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">피클 빼기</span>
+                    <span class="text-xs text-neutral-500">오이/피클 없이 조리</span>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-neutral-500">무료</span>
+              </label>
+
+              <!-- 양파 빼기 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-red-400 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="sub_onion" onchange="calcToppingSelections()" class="w-5 h-5 accent-red-600 rounded">
+                  <span class="text-2xl">🧅</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">생양파 빼기</span>
+                    <span class="text-xs text-neutral-500">매운 양파 없이 조리</span>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-neutral-500">무료</span>
+              </label>
+
+              <!-- 소스 빼기 -->
+              <label class="flex items-center justify-between p-3 border-2 border-neutral-200 hover:border-red-400 rounded-xl cursor-pointer transition">
+                <div class="flex items-center space-x-3">
+                  <input type="checkbox" id="sub_sauce" onchange="calcToppingSelections()" class="w-5 h-5 accent-red-600 rounded">
+                  <span class="text-2xl">🥫</span>
+                  <div>
+                    <span class="text-sm font-black text-neutral-900 block">특제 소스 빼기</span>
+                    <span class="text-xs text-neutral-500">소스 없이 담백하게 조리</span>
+                  </div>
+                </div>
+                <span class="text-xs font-bold text-neutral-500">무료</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 하단 완료 & 초기화 버튼 -->
+          <div class="p-4 bg-neutral-50 border-t border-neutral-200 space-y-2">
+            <button onclick="confirmToppingSelection()" class="w-full h-14 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl font-black text-base shadow-md transition">
+              토핑 변경 완료 (<span id="toppingTempPrice">+0원</span>)
+            </button>
+            <button onclick="resetToppingSelection()" class="w-full py-2 text-xs font-bold text-neutral-500 hover:text-black">
+              원래 기본 구성으로 초기화
             </button>
           </div>
         </div>
@@ -428,7 +596,7 @@
       </div>
 
       <!-- ============================================== -->
-      <!-- [서브 모달 2] 음료 메뉴 변경 팝업 (신규 추가!) -->
+      <!-- [서브 모달 2] 음료 메뉴 변경 팝업 -->
       <!-- ============================================== -->
       <div id="drinkSelectModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
         <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4">
@@ -493,7 +661,6 @@
 
       <!-- ============================================== -->
       <!-- [화면 5] 장바구니 확인 & 수령 방식 선택 화면 -->
-      <!-- 수량 증감(+/-), 삭제, 메뉴 추가 버튼 추가 -->
       <!-- ============================================== -->
       <section id="screen-cart" class="screen-view hidden flex-1 flex flex-col justify-between p-5">
         <div class="space-y-4">
@@ -503,7 +670,6 @@
               <span class="text-xs font-bold text-mcdGreen bg-emerald-100 px-3 py-1 rounded-full">주문 확인</span>
               <h2 class="text-2xl font-black text-neutral-900 mt-1">내가 고른 메뉴 확인</h2>
             </div>
-            <!-- 메뉴 더 추가하기 버튼 -->
             <button onclick="goToScreen('screen-menu-list')" class="px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 rounded-xl text-xs font-black text-neutral-800 flex items-center space-x-1 transition">
               <i class="fas fa-plus"></i>
               <span>메뉴 더 담기</span>
@@ -747,7 +913,7 @@
 
     </main>
 
-    <!-- 직원 호출 모달 (기존 단순 alert 대신 키오스크 전용 안내 모달) -->
+    <!-- 직원 호출 모달 -->
     <div id="staffModal" class="hidden absolute inset-0 bg-black/70 z-50 flex items-center justify-center p-6 text-center">
       <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl animate-fade-in">
         <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto">
@@ -842,28 +1008,28 @@
     // ==============================================
     const MENU_DATA = {
       sets: [
-        { id: 'bigmac_set', name: '빅맥® 세트', price: 6900, icon: '🍔', desc: '구성: 버거 + 감자튀김 + 콜라', isRecommend: true },
-        { id: '1955_set', name: '1955® 버거 세트', price: 7500, icon: '🥓', desc: '깊고 풍성한 비프 패티와 그릴드 어니언 세트' },
-        { id: 'bulgogi_set', name: '불고기 버거 세트', price: 5500, icon: '🥪', desc: '달콤한 불고기 소스가 듬뿍 담긴 세트' },
-        { id: 'shanghai_set', name: '맥스파이시® 상하이 세트', price: 6800, icon: '🍗', desc: '매콤 바삭한 닭가슴살 패티 버거 세트' }
+        { id: 'bigmac_set', name: '빅맥® 세트', price: 6900, icon: '🍔', desc: '구성: 버거 + 감자튀김 + 콜라', isBurger: true, isRecommend: true },
+        { id: '1955_set', name: '1955® 버거 세트', price: 7500, icon: '🥓', desc: '깊고 풍성한 비프 패티와 그릴드 어니언 세트', isBurger: true },
+        { id: 'bulgogi_set', name: '불고기 버거 세트', price: 5500, icon: '🥪', desc: '달콤한 불고기 소스가 듬뿍 담긴 세트', isBurger: true },
+        { id: 'shanghai_set', name: '맥스파이시® 상하이 세트', price: 6800, icon: '🍗', desc: '매콤 바삭한 닭가슴살 패티 버거 세트', isBurger: true }
       ],
       singles: [
-        { id: 'bigmac_single', name: '빅맥® 단품', price: 5300, icon: '🍔', desc: '순 쇠고기 패티 2장의 클래식 버거' },
-        { id: '1955_single', name: '1955® 버거 단품', price: 6200, icon: '🥓', desc: '깊은 풍미의 프리미엄 비프 버거' },
-        { id: 'bulgogi_single', name: '불고기 버거 단품', price: 3300, icon: '🥪', desc: '한국인의 입맛에 맞춘 달콤한 불고기 버거' },
-        { id: 'shanghai_single', name: '맥스파이시® 상하이 단품', price: 5200, icon: '🍗', desc: '매콤 바삭한 치킨 통살 패티' }
+        { id: 'bigmac_single', name: '빅맥® 단품', price: 5300, icon: '🍔', desc: '순 쇠고기 패티 2장의 클래식 버거', isBurger: true },
+        { id: '1955_single', name: '1955® 버거 단품', price: 6200, icon: '🥓', desc: '깊은 풍미의 프리미엄 비프 버거', isBurger: true },
+        { id: 'bulgogi_single', name: '불고기 버거 단품', price: 3300, icon: '🥪', desc: '한국인의 입맛에 맞춘 달콤한 불고기 버거', isBurger: true },
+        { id: 'shanghai_single', name: '맥스파이시® 상하이 단품', price: 5200, icon: '🍗', desc: '매콤 바삭한 치킨 통살 패티', isBurger: true }
       ],
       sides: [
-        { id: 'fries', name: '후렌치 후라이 (감자튀김)', price: 2100, icon: '🍟', desc: '바삭하고 짭조름한 골든 감자튀김' },
-        { id: 'cheese_sticks', name: '골든 모짜렐라 치즈스틱 (2조각)', price: 2600, icon: '🧀', desc: '자연 모짜렐라 치즈가 가득한 간식' },
-        { id: 'coleslaw', name: '코울슬로 (양배추 샐러드)', price: 2000, icon: '🥗', desc: '새콤달콤 아삭한 양배추 샐러드' },
-        { id: 'nuggets', name: '맥너겟® 4조각', price: 2800, icon: '🍗', desc: '바삭하고 부드러운 치킨 너겟' }
+        { id: 'fries', name: '후렌치 후라이 (감자튀김)', price: 2100, icon: '🍟', desc: '바삭하고 짭조름한 골든 감자튀김', isBurger: false },
+        { id: 'cheese_sticks', name: '골든 모짜렐라 치즈스틱 (2조각)', price: 2600, icon: '🧀', desc: '자연 모짜렐라 치즈가 가득한 간식', isBurger: false },
+        { id: 'coleslaw', name: '코울슬로 (양배추 샐러드)', price: 2000, icon: '🥗', desc: '새콤달콤 아삭한 양배추 샐러드', isBurger: false },
+        { id: 'nuggets', name: '맥너겟® 4조각', price: 2800, icon: '🍗', desc: '바삭하고 부드러운 치킨 너겟', isBurger: false }
       ],
       drinks: [
-        { id: 'coke', name: '코카콜라', price: 1700, icon: '🥤', desc: '시원하고 청량한 오리지널 콜라' },
-        { id: 'coke_zero', name: '코카콜라 제로', price: 1700, icon: '🥤', desc: '칼로리 부담 없는 제로 탄산음료' },
-        { id: 'sprite', name: '스프라이트', price: 1700, icon: '🥤', desc: '상쾌한 레몬라임 향 탄산음료' },
-        { id: 'coffee', name: '드립 커피 (원두커피)', price: 2000, icon: '☕', desc: '갓 내린 따뜻하고 향긋한 아메리카노' }
+        { id: 'coke', name: '코카콜라', price: 1700, icon: '🥤', desc: '시원하고 청량한 오리지널 콜라', isBurger: false },
+        { id: 'coke_zero', name: '코카콜라 제로', price: 1700, icon: '🥤', desc: '칼로리 부담 없는 제로 탄산음료', isBurger: false },
+        { id: 'sprite', name: '스프라이트', price: 1700, icon: '🥤', desc: '상쾌한 레몬라임 향 탄산음료', isBurger: false },
+        { id: 'coffee', name: '드립 커피 (원두커피)', price: 2000, icon: '☕', desc: '갓 내린 따뜻하고 향긋한 아메리카노', isBurger: false }
       ]
     };
 
@@ -874,6 +1040,8 @@
     let activeItem = null;
     let isSetMenu = true;
     let basePrice = 6900;
+    
+    // 사이드 및 음료 선택 상태
     let currentSidePrice = 0;
     let currentSideName = '후렌치 후라이 (감자튀김)';
     let currentSideIcon = '🍟';
@@ -882,7 +1050,12 @@
     let currentDrinkIcon = '🥤';
     let modalQuantity = 1;
 
-    // 장바구니 배열 (각 품목 객체 저장)
+    // ★ [신규] 토핑(속재료) 선택 상태
+    let currentToppingPrice = 0;
+    let currentToppingsAdded = []; // [{name: '치즈', price: 300}, ...]
+    let currentToppingsRemoved = []; // ['피클', '생양파']
+
+    // 장바구니 배열
     let cart = [];
     let pickupMethod = 'counter';
     let tableTentNumber = '';
@@ -914,14 +1087,11 @@
       goToScreen('screen-menu-list');
     }
 
-    // ==============================================
-    // 카테고리 전환 및 메뉴 카드 렌더링
-    // ==============================================
+    // 카테고리 전환
     function switchCategory(cat) {
       currentCategory = cat;
       playBeep(600, 0.08);
 
-      // 탭 스타일 갱신
       document.querySelectorAll('.category-tab').forEach(t => {
         t.className = 'category-tab px-5 py-2.5 bg-neutral-100 text-neutral-700 font-bold text-base rounded-xl hover:bg-neutral-200 whitespace-nowrap transition';
       });
@@ -930,12 +1100,11 @@
         activeTab.className = 'category-tab px-5 py-2.5 bg-mcdRed text-white font-black text-base rounded-xl shadow whitespace-nowrap transition';
       }
 
-      // 배너 텍스트 분기
       const noticeText = document.getElementById('categoryNoticeText');
       if (cat === 'sets') {
         noticeText.innerHTML = '가장 인기 있는 <b>빅맥® 세트</b>를 눌러 주문해 보세요.';
       } else if (cat === 'singles') {
-        noticeText.innerHTML = '버거 단품 메뉴입니다. 원하시는 버거를 골라보세요.';
+        noticeText.innerHTML = '버거 단품 메뉴입니다. 토핑 추가/빼기가 가능합니다.';
       } else if (cat === 'sides') {
         noticeText.innerHTML = '감자튀김, 치즈스틱 등 함께 먹기 좋은 간식 메뉴입니다.';
       } else if (cat === 'drinks') {
@@ -967,7 +1136,14 @@
         if (currentCategory === 'sets') {
           changeGuide = `
             <div class="mt-3 bg-amber-50 border border-amber-300 rounded-xl py-2 px-3 flex items-center justify-between text-xs font-black text-amber-900">
-              <span>🍟 함께 먹는 메뉴(감자튀김/치즈스틱) 변경 가능</span>
+              <span>🍟 속재료(토핑) 및 사이드/음료 변경 가능</span>
+              <span class="underline">선택하기 →</span>
+            </div>
+          `;
+        } else if (item.isBurger) {
+          changeGuide = `
+            <div class="mt-3 bg-emerald-50 border border-emerald-300 rounded-xl py-2 px-3 flex items-center justify-between text-xs font-black text-emerald-900">
+              <span>🥬 버거 속재료(치즈/토마토/피클 등) 변경 가능</span>
               <span class="underline">선택하기 →</span>
             </div>
           `;
@@ -1007,12 +1183,13 @@
     }
 
     // ==============================================
-    // 옵션 모달 열기 및 세부 선택
+    // 옵션 모달 제어
     // ==============================================
     function openItemDetailModal(item, isSet) {
       activeItem = item;
       isSetMenu = isSet;
       basePrice = item.price;
+      
       currentSidePrice = 0;
       currentSideName = '후렌치 후라이 (감자튀김)';
       currentSideIcon = '🍟';
@@ -1021,24 +1198,34 @@
       currentDrinkIcon = '🥤';
       modalQuantity = 1;
 
+      // 토핑 상태 초기화
+      resetToppingSelection(false);
+
       document.getElementById('modalMenuName').innerText = item.name;
       document.getElementById('modalMenuIcon').innerText = item.icon;
       document.getElementById('modalMenuDesc').innerText = item.desc;
 
+      const toppingBlock = document.getElementById('toppingOptionsBlock');
       const setBlock = document.getElementById('setOptionsBlock');
       const singleBlock = document.getElementById('singleQuantityBlock');
+
+      // 버거 품목(세트 버거 또는 단품 버거)일 때만 토핑 변경 블록 노출
+      if (item.isBurger) {
+        toppingBlock.classList.remove('hidden');
+      } else {
+        toppingBlock.classList.add('hidden');
+      }
 
       if (isSet) {
         setBlock.classList.remove('hidden');
         singleBlock.classList.add('hidden');
-        updateModalDisplay();
       } else {
         setBlock.classList.add('hidden');
         singleBlock.classList.remove('hidden');
         document.getElementById('modalQtyDisplay').innerText = modalQuantity;
-        document.getElementById('modalTotalPrice').innerText = (basePrice * modalQuantity).toLocaleString();
       }
 
+      updateModalDisplay();
       document.getElementById('optionModal').classList.remove('hidden');
       playBeep(580, 0.1);
     }
@@ -1051,11 +1238,12 @@
     function changeModalQty(delta) {
       modalQuantity = Math.max(1, modalQuantity + delta);
       document.getElementById('modalQtyDisplay').innerText = modalQuantity;
-      document.getElementById('modalTotalPrice').innerText = (basePrice * modalQuantity).toLocaleString();
+      updateModalDisplay();
       playBeep(650, 0.05);
     }
 
     function updateModalDisplay() {
+      // 사이드 및 음료 표시
       document.getElementById('currentSideName').innerText = currentSideName;
       document.getElementById('currentSideIcon').innerText = currentSideIcon;
       document.getElementById('currentSidePriceDiff').innerText = `+${currentSidePrice.toLocaleString()}원`;
@@ -1064,11 +1252,125 @@
       document.getElementById('currentDrinkIcon').innerText = currentDrinkIcon;
       document.getElementById('currentDrinkPriceDiff').innerText = `+${currentDrinkPrice.toLocaleString()}원`;
 
-      const total = basePrice + currentSidePrice + currentDrinkPrice;
+      // 토핑 요약 표시
+      updateToppingSummaryUI();
+
+      // 합계 계산
+      let unitTotal = basePrice + currentToppingPrice;
+      if (isSetMenu) {
+        unitTotal += currentSidePrice + currentDrinkPrice;
+      }
+      const total = unitTotal * (isSetMenu ? 1 : modalQuantity);
       document.getElementById('modalTotalPrice').innerText = total.toLocaleString();
     }
 
-    // 사이드 교체 모달
+    // ==============================================
+    // ★ [신규 구현] 햄버거 토핑(속재료) 변경 모달 및 상태
+    // ==============================================
+    function openToppingModal() {
+      // 현재 선택된 토핑 체크박스 상태 동기화
+      document.getElementById('top_cheese').checked = currentToppingsAdded.some(t => t.name === '치즈');
+      document.getElementById('top_tomato').checked = currentToppingsAdded.some(t => t.name === '토마토');
+      document.getElementById('top_bacon').checked = currentToppingsAdded.some(t => t.name === '베이컨');
+      document.getElementById('top_patty').checked = currentToppingsAdded.some(t => t.name === '패티');
+
+      document.getElementById('sub_pickle').checked = currentToppingsRemoved.includes('피클');
+      document.getElementById('sub_onion').checked = currentToppingsRemoved.includes('생양파');
+      document.getElementById('sub_sauce').checked = currentToppingsRemoved.includes('특제소스');
+
+      calcToppingSelections();
+      document.getElementById('toppingModal').classList.remove('hidden');
+      playBeep(650, 0.1);
+    }
+
+    function closeToppingModal() {
+      document.getElementById('toppingModal').classList.add('hidden');
+      playBeep(350, 0.1);
+    }
+
+    function calcToppingSelections() {
+      let tempPrice = 0;
+      if (document.getElementById('top_cheese').checked) tempPrice += 300;
+      if (document.getElementById('top_tomato').checked) tempPrice += 400;
+      if (document.getElementById('top_bacon').checked) tempPrice += 600;
+      if (document.getElementById('top_patty').checked) tempPrice += 1500;
+      
+      document.getElementById('toppingTempPrice').innerText = `+${tempPrice.toLocaleString()}원`;
+    }
+
+    function confirmToppingSelection() {
+      currentToppingsAdded = [];
+      currentToppingsRemoved = [];
+      currentToppingPrice = 0;
+
+      if (document.getElementById('top_cheese').checked) {
+        currentToppingsAdded.push({ name: '치즈', price: 300 });
+        currentToppingPrice += 300;
+      }
+      if (document.getElementById('top_tomato').checked) {
+        currentToppingsAdded.push({ name: '토마토', price: 400 });
+        currentToppingPrice += 400;
+      }
+      if (document.getElementById('top_bacon').checked) {
+        currentToppingsAdded.push({ name: '베이컨', price: 600 });
+        currentToppingPrice += 600;
+      }
+      if (document.getElementById('top_patty').checked) {
+        currentToppingsAdded.push({ name: '패티', price: 1500 });
+        currentToppingPrice += 1500;
+      }
+
+      if (document.getElementById('sub_pickle').checked) currentToppingsRemoved.push('피클');
+      if (document.getElementById('sub_onion').checked) currentToppingsRemoved.push('생양파');
+      if (document.getElementById('sub_sauce').checked) currentToppingsRemoved.push('특제소스');
+
+      closeToppingModal();
+      updateModalDisplay();
+      playBeep(880, 0.15);
+    }
+
+    function resetToppingSelection(shouldUpdate = true) {
+      currentToppingsAdded = [];
+      currentToppingsRemoved = [];
+      currentToppingPrice = 0;
+      
+      const elIds = ['top_cheese', 'top_tomato', 'top_bacon', 'top_patty', 'sub_pickle', 'sub_onion', 'sub_sauce'];
+      elIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+      });
+
+      if (shouldUpdate) {
+        closeToppingModal();
+        updateModalDisplay();
+        playBeep(520, 0.08);
+      }
+    }
+
+    function updateToppingSummaryUI() {
+      const summaryEl = document.getElementById('currentToppingSummary');
+      const priceDiffEl = document.getElementById('currentToppingPriceDiff');
+
+      let parts = [];
+      if (currentToppingsAdded.length > 0) {
+        parts.push(currentToppingsAdded.map(t => `${t.name}추가`).join(', '));
+      }
+      if (currentToppingsRemoved.length > 0) {
+        parts.push(currentToppingsRemoved.map(t => `${t}제외`).join(', '));
+      }
+
+      if (parts.length === 0) {
+        summaryEl.innerText = '기본 구성 (변경 없음)';
+        summaryEl.className = 'text-sm font-black text-neutral-900';
+      } else {
+        summaryEl.innerText = parts.join(' / ');
+        summaryEl.className = 'text-sm font-black text-emerald-700';
+      }
+
+      priceDiffEl.innerText = `+${currentToppingPrice.toLocaleString()}원`;
+    }
+
+    // 사이드 및 음료 변경 모달 제어
     function openSideSelectModal() {
       document.getElementById('sideSelectModal').classList.remove('hidden');
       playBeep(650, 0.1);
@@ -1085,7 +1387,6 @@
       playBeep(780, 0.15);
     }
 
-    // 음료 교체 모달
     function openDrinkSelectModal() {
       document.getElementById('drinkSelectModal').classList.remove('hidden');
       playBeep(650, 0.1);
@@ -1108,7 +1409,24 @@
     function addToCartAndGoNext() {
       closeOptionModal();
       
-      const itemPrice = isSetMenu ? (basePrice + currentSidePrice + currentDrinkPrice) : basePrice;
+      let unitPrice = basePrice + currentToppingPrice;
+      if (isSetMenu) {
+        unitPrice += currentSidePrice + currentDrinkPrice;
+      }
+
+      // 토핑 텍스트 생성
+      let toppingText = '';
+      let toppingParts = [];
+      if (currentToppingsAdded.length > 0) {
+        toppingParts.push(currentToppingsAdded.map(t => `${t.name} 추가(+${t.price}원)`).join(', '));
+      }
+      if (currentToppingsRemoved.length > 0) {
+        toppingParts.push(currentToppingsRemoved.map(t => `${t} 제외`).join(', '));
+      }
+      if (toppingParts.length > 0) {
+        toppingText = toppingParts.join(' / ');
+      }
+
       const cartItem = {
         id: Date.now(),
         name: activeItem.name,
@@ -1117,7 +1435,9 @@
         sideName: isSetMenu ? currentSideName : null,
         sidePrice: currentSidePrice,
         drinkName: isSetMenu ? currentDrinkName : null,
-        unitPrice: itemPrice,
+        toppingText: toppingText,
+        toppingPrice: currentToppingPrice,
+        unitPrice: unitPrice,
         quantity: isSetMenu ? 1 : modalQuantity,
       };
 
@@ -1141,7 +1461,6 @@
       goToScreen('screen-cart');
     }
 
-    // 장바구니 화면 렌더링
     function renderCartList() {
       const container = document.getElementById('cartItemsListContainer');
       container.innerHTML = '';
@@ -1176,12 +1495,23 @@
 
         let optionsTag = '';
         if (item.isSet) {
-          optionsTag = `
+          optionsTag += `
             <div class="mt-1 space-y-0.5">
               <span class="inline-block bg-amber-400 text-neutral-950 text-xs font-black px-2 py-0.5 rounded shadow-sm">
                 사이드: ${item.sideName}
               </span>
               <p class="text-xs text-neutral-500">음료: ${item.drinkName}</p>
+            </div>
+          `;
+        }
+
+        // 토핑 태그 표시
+        if (item.toppingText) {
+          optionsTag += `
+            <div class="mt-1">
+              <span class="inline-block bg-emerald-100 border border-emerald-400 text-emerald-900 text-xs font-bold px-2 py-0.5 rounded">
+                🥬 토핑: ${item.toppingText}
+              </span>
             </div>
           `;
         }
@@ -1198,7 +1528,6 @@
             <span class="text-lg font-black text-neutral-900">${itemTotal.toLocaleString()}원</span>
           </div>
 
-          <!-- 수량 조절 및 삭제 버튼 바 -->
           <div class="flex items-center justify-between pt-2 border-t border-neutral-100">
             <button onclick="deleteCartItem(${index})" class="text-xs text-red-600 font-bold hover:underline flex items-center space-x-1">
               <i class="far fa-trash-alt"></i>
