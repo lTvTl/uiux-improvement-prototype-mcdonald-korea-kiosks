@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>맥도날드 고령자 친화 키오스크 UI/UX 프로토타입</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Pretendard Web Font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mcdRed: '#DA291C',
+            mcdYellow: '#FFC72C',
+            mcdDark: '#27251F',
+            mcdCream: '#FBF8F5',
+            mcdGreen: '#15803D'
+          },
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 199, 44, 0.7); }
+      50% { transform: scale(1.03); box-shadow: 0 0 0 16px rgba(255, 199, 44, 0); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-bounce-subtle {
+      animation: bounce-subtle 1.8s infinite ease-in-out;
+    }
+    /* 카드 삽입 애니메이션 */
+    @keyframes insert-card {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-40px); opacity: 1; }
+      100% { transform: translateY(-30px); opacity: 0.8; }
+    }
+    .card-inserting {
+      animation: insert-card 1.2s infinite alternate ease-in-out;
+    }
+    /* 스크롤바 숨기기 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-neutral-800 text-mcdDark min-h-screen flex items-center justify-center p-0 sm:p-4">
+
+  <!-- 전체 레이아웃 컨테이너 (키오스크 비율: 모바일/태블릿 시뮬레이터) -->
+  <div class="w-full max-w-md h-screen sm:h-[920px] bg-neutral-100 sm:rounded-3xl shadow-2xl flex flex-col relative overflow-hidden border-0 sm:border-8 border-neutral-700">
+
+    <!-- 최상단 상태바 & 연구 제어 헤더 -->
+    <header class="bg-mcdRed text-white px-4 py-2.5 flex items-center justify-between z-30 shadow-md">
+      <div class="flex items-center space-x-2">
+        <div class="w-7 h-7 bg-mcdYellow rounded-full flex items-center justify-center font-black text-mcdRed text-base">
+          M
+        </div>
+        <span class="text-sm font-bold tracking-tight">맥도날드 배려 키오스크</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <!-- 소리 안내 토글 -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="px-2 py-1 bg-red-800 hover:bg-red-900 text-xs rounded-full flex items-center space-x-1 border border-red-400">
+          <i id="soundIcon" class="fas fa-volume-up text-mcdYellow"></i>
+          <span id="soundText" class="text-xs">음성 켜짐</span>
+        </button>
+        <!-- HCI 기획 비교 모달 열기 -->
+        <button onclick="openInfoModal()" class="px-2.5 py-1 bg-mcdYellow text-neutral-900 font-extrabold text-xs rounded-full hover:bg-yellow-400 flex items-center space-x-1 shadow">
+          <i class="fas fa-file-alt"></i>
+          <span>HCI 개선점</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 실시간 과업 소요 시간 안내 (HCI 측정 바) -->
+    <div id="timerBar" class="bg-neutral-900 text-neutral-300 text-xs px-4 py-1.5 flex justify-between items-center z-20">
+      <div class="flex items-center space-x-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>과업: <b class="text-white">빅맥 세트 사이드 변경 결제</b></span>
+      </div>
+      <div class="font-mono text-mcdYellow font-bold text-sm">
+        <i class="fas fa-stopwatch mr-1"></i><span id="taskTimer">00:00</span>
+      </div>
+    </div>
+
+    <!-- 본문 인터랙티브 화면 영역 -->
+    <main class="flex-1 relative overflow-y-auto no-scrollbar bg-neutral-50 flex flex-col">
+
+      <!-- ============================================== -->
+      <!-- [화면 1] 시작 화면 (Screen 1: Start Screen) -->
+      <!-- 개선: 상단 광고 면적 25% 축소, 중앙 초대형 주문하기 버튼 -->
+      <!-- ============================================== -->
+      <section id="screen-start" class="screen-view flex-1 flex flex-col justify-between p-6">
+        <!-- 상단 축소된 프로모션 배너 (시각적 자극 완화) -->
+        <div class="bg-gradient-to-r from-red-700 to-mcdRed text-white rounded-2xl p-4 shadow-md border-2 border-red-500 flex items-center justify-between">
+          <div>
+            <span class="bg-mcdYellow text-neutral-900 text-xs font-black px-2 py-0.5 rounded-full">신제품</span>
+            <h2 class="text-xl font-black mt-1">맥크리스피 & 빅맥</h2>
+            <p class="text-xs text-red-100">오늘의 든든한 한 끼를 맥도날드에서!</p>
+          </div>
+          <div class="text-5xl text-yellow-300 drop-shadow">🍔</div>
+        </div>
+
+        <!-- 중앙 핵심: 68세 어르신도 단번에 알아볼 수 있는 초대형 주문 시작 버튼 (E01/C01 해결) -->
+        <div class="my-auto text-center space-y-6">
+          <div class="inline-block bg-yellow-100 border border-yellow-300 text-yellow-900 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm">
+            👴 고령 어르신을 위한 <b>쉬운 주문 화면</b>입니다
+          </div>
+
+          <button onclick="goToScreen('screen-order-type')" class="w-full py-12 px-6 bg-mcdYellow hover:bg-yellow-400 active:scale-95 text-neutral-900 rounded-3xl shadow-2xl border-4 border-amber-500 flex flex-col items-center justify-center space-y-3 transition-transform animate-pulse-slow">
+            <div class="w-20 h-20 bg-mcdRed text-white rounded-full flex items-center justify-center text-4xl shadow-inner">
+              <i class="fas fa-hand-pointer"></i>
+            </div>
+            <span class="text-3xl font-black tracking-tight text-neutral-950">주문 시작하기</span>
+            <span class="text-base font-bold text-neutral-800 bg-white/70 px-4 py-1 rounded-full">
+              화면 아무 곳이나 터치하세요
+            </span>
+          </button>
+
+          <p class="text-sm font-medium text-neutral-500">
+            글씨가 크고 주문 과정이 복잡하지 않아 누구나 쉽게 이용할 수 있습니다.
+          </p>
+        </div>
+
+        <!-- 하단 도움 요청 안내 -->
+        <div class="bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl p-3 flex items-center justify-between text-neutral-800">
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-user-friends text-xl text-mcdRed"></i>
+            <span class="text-sm font-bold">어려우시면 직원을 불러주세요!</span>
+          </div>
+          <button onclick="callStaffAlert()" class="px-3 py-1.5 bg-neutral-800 hover:bg-black text-white text-xs font-bold rounded-lg shadow">
+            직원 호출
+          </button>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- [화면 2] 식사 장소 선택 화면 (Screen 2: Order Type) -->
+      <!-- 직관적인 2분할 대형 버튼 -->
+      <!-- ============================================== -->
+      <section id="screen-order-type" class="screen-view hidden flex-1 flex flex-col justify-between p-6">
+        <div class="text-center pt-2 pb-4">
+          <span class="text-sm font-bold text-mcdRed bg-red-100 px-3 py-1 rounded-full">1단계 : 장소 선택</span>
+          <h2 class="text-2xl font-black text-neutral-900 mt-2">어디서 드시겠습니까?</h2>
+          <p class="text-sm text-neutral-600 mt-1">원하시는 식사 방식을 선택해 주세요</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 my-auto">
+          <!-- 매장 식사 -->
+          <button onclick="selectOrderType('매장 식사')" class="h-44 bg-white hover:bg-yellow-50 active:scale-98 border-4 border-amber-400 rounded-3xl p-6 flex items-center justify-between shadow-lg transition-transform text-left">
+            <div class="space-y-1">
+              <span class="inline-block bg-amber-100 text-amber-900 text-xs font-extrabold px-2.5 py-0.5 rounded-full mb-1">안에서 먹고 가기</span>
+              <h3 class="text-3xl font-black text-neutral-900">매장 식사</h3>
+              <p class="text-sm font-medium text-neutral-600">매장 안 테이블에서 편안하게 식사합니다</p>
+            </div>
+            <div class="text-6xl text-amber-500 ml-4">
+              <i class="fas fa-store"></i>
+            </div>
+          </button>
+
+          <!-- 포장 주문 -->
+          <button onclick="selectOrderType('포장 주문')" class="h-44 bg-white hover:bg-red-50 active:scale-98 border-4 border-red-300 rounded-3xl p-6 flex items-center justify-between shadow-lg transition-transform text-left">
+            <div class="space-y-1">
+              <span class="inline-block bg-red-100 text-mcdRed text-xs font-extrabold px-2.5 py-0.5 rounded-full mb-1">가지고 나가기</span>
+              <h3 class="text-3xl font-black text-neutral-900">포장 주문</h3>
+              <p class="text-sm font-medium text-neutral-600">음식을 가방에 포장하여 집으로 가져갑니다</p>
+            </div>
+            <div class="text-6xl text-mcdRed ml-4">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+          </button>
+        </div>
+
+        <!-- 이전 버튼 -->
+        <button onclick="goToScreen('screen-start')" class="h-14 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2">
+          <i class="fas fa-arrow-left"></i>
+          <span>처음으로 돌아가기</span>
+        </button>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- [화면 3] 메뉴 선택 화면 (Screen 3: Menu List) -->
+      <!-- 상단 카테고리 탭 + 빅맥 세트 하이라이트 -->
+      <!-- ============================================== -->
+      <section id="screen-menu-list" class="screen-view hidden flex-1 flex flex-col justify-between">
+        <!-- 카테고리 탭 -->
+        <div class="bg-white border-b border-neutral-200 px-3 py-2 flex space-x-2 overflow-x-auto no-scrollbar">
+          <button class="px-5 py-2.5 bg-mcdRed text-white font-black text-base rounded-xl shadow whitespace-nowrap">
+            버거 세트
+          </button>
+          <button class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-bold text-base rounded-xl hover:bg-neutral-200 whitespace-nowrap">
+            버거 단품
+          </button>
+          <button class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-bold text-base rounded-xl hover:bg-neutral-200 whitespace-nowrap">
+            사이드 / 디저트
+          </button>
+          <button class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-bold text-base rounded-xl hover:bg-neutral-200 whitespace-nowrap">
+            음료
+          </button>
+        </div>
+
+        <!-- 안내문 -->
+        <div class="bg-amber-100 border-l-4 border-amber-500 px-4 py-2 text-xs font-bold text-neutral-900 flex items-center justify-between">
+          <span>손주에게 인기 1위! <b>빅맥 세트</b>를 눌러보세요.</span>
+          <span class="text-amber-800">👈 추천</span>
+        </div>
+
+        <!-- 메뉴 목록 리스트 -->
+        <div class="flex-1 p-4 space-y-4 overflow-y-auto no-scrollbar">
+          <!-- 1. 빅맥 세트 (핵심 과업 대상) -->
+          <div onclick="openOptionModal('빅맥 세트', 6900)" class="bg-white border-4 border-amber-400 rounded-3xl p-4 shadow-md hover:shadow-xl active:scale-98 cursor-pointer transition relative">
+            <div class="absolute -top-3 left-4 bg-mcdRed text-white text-xs font-extrabold px-3 py-1 rounded-full shadow">
+              ★ 어르신 추천 1위
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-28 h-28 bg-amber-50 rounded-2xl flex items-center justify-center text-6xl shadow-inner border border-amber-200">
+                🍔
+              </div>
+              <div class="flex-1">
+                <h3 class="text-2xl font-black text-neutral-900">빅맥® 세트</h3>
+                <p class="text-xs text-neutral-600 mt-1">버거 + 감자튀김(M) + 콜라(M)</p>
+                <div class="mt-2 flex items-baseline space-x-1">
+                  <span class="text-2xl font-black text-mcdRed">6,900</span>
+                  <span class="text-sm font-bold text-neutral-700">원</span>
+                </div>
+              </div>
+              <div class="text-amber-500 text-2xl pr-1">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+            <div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl py-2 px-3 flex items-center justify-between text-xs font-bold text-amber-900">
+              <span>🍟 사이드(감자튀김/치즈스틱) 변경 가능</span>
+              <span class="underline">선택하기 →</span>
+            </div>
+          </div>
+
+          <!-- 2. 1955 버거 세트 -->
+          <div class="bg-white border-2 border-neutral-200 rounded-3xl p-4 shadow-sm opacity-80 flex items-center space-x-4">
+            <div class="w-24 h-24 bg-neutral-100 rounded-2xl flex items-center justify-center text-5xl">
+              🥓
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-neutral-800">1955® 버거 세트</h3>
+              <p class="text-xs text-neutral-500 mt-1">버거 + 감자튀김 + 콜라</p>
+              <div class="mt-2 text-xl font-bold text-neutral-800">7,500원</div>
+            </div>
+          </div>
+
+          <!-- 3. 불고기 버거 세트 -->
+          <div class="bg-white border-2 border-neutral-200 rounded-3xl p-4 shadow-sm opacity-80 flex items-center space-x-4">
+            <div class="w-24 h-24 bg-neutral-100 rounded-2xl flex items-center justify-center text-5xl">
+              🥪
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-neutral-800">불고기 버거 세트</h3>
+              <p class="text-xs text-neutral-500 mt-1">달콤한 불고기 소스 세트</p>
+              <div class="mt-2 text-xl font-bold text-neutral-800">5,500원</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 하단 네비게이션 바 -->
+        <div class="bg-white border-t border-neutral-200 p-3 flex space-x-3">
+          <button onclick="goToScreen('screen-order-type')" class="w-1/3 h-14 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-bold text-base flex items-center justify-center space-x-1">
+            <i class="fas fa-arrow-left"></i>
+            <span>이전</span>
+          </button>
+          <div class="w-2/3 h-14 bg-neutral-100 border border-neutral-300 rounded-2xl flex items-center justify-between px-4">
+            <span class="text-sm font-bold text-neutral-600">담긴 메뉴</span>
+            <span id="bottomCartCount" class="text-base font-black text-mcdRed">0 개</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- [화면 4 모달] 메뉴 상세 및 사이드 변경 화면 (Req 1 해결!) -->
+      <!-- 개선: 버튼 면적 200% 확대, 고대비 테두리, 치즈스틱 원클릭 변경 -->
+      <!-- ============================================== -->
+      <div id="optionModal" class="hidden fixed inset-0 bg-black/60 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-fade-in">
+          <!-- 모달 헤더 -->
+          <div class="bg-neutral-100 px-5 py-3 border-b flex justify-between items-center">
+            <h3 class="text-xl font-black text-neutral-900">메뉴 세부 구성 확인</h3>
+            <button onclick="closeOptionModal()" class="w-9 h-9 bg-neutral-200 hover:bg-neutral-300 rounded-full flex items-center justify-center text-neutral-700 font-bold">
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
+
+          <!-- 모달 내용 -->
+          <div class="p-5 overflow-y-auto no-scrollbar space-y-5">
+            <!-- 버거 정보 -->
+            <div class="flex items-center space-x-4 bg-amber-50/60 p-3 rounded-2xl border border-amber-200">
+              <span class="text-5xl">🍔</span>
+              <div>
+                <h4 class="text-2xl font-black text-neutral-900">빅맥® 세트</h4>
+                <p class="text-sm text-neutral-600">기본 구성: 버거 + 사이드 + 음료</p>
+              </div>
+            </div>
+
+            <!-- 핵심 개선 1: 눈에 확 띄는 사이드 변경 블록 (200% 확대 & 강조 테두리) -->
+            <div class="bg-amber-50 border-4 border-amber-500 rounded-2xl p-4 shadow-md space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="bg-mcdRed text-white text-xs font-black px-2 py-0.5 rounded">필수 확인</span>
+                  <span class="text-lg font-black text-neutral-900">사이드 메뉴 선택</span>
+                </div>
+                <span class="text-xs font-extrabold text-amber-800 bg-amber-200 px-2 py-0.5 rounded-full">
+                  바꾸기 가능
+                </span>
+              </div>
+
+              <!-- 현재 선택된 사이드 표시 -->
+              <div class="bg-white border-2 border-neutral-300 rounded-xl p-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <span id="currentSideIcon" class="text-3xl">🍟</span>
+                  <div>
+                    <span class="text-xs text-neutral-500">선택된 사이드</span>
+                    <h5 id="currentSideName" class="text-lg font-black text-neutral-900">후렌치 후라이 (감자튀김)</h5>
+                  </div>
+                </div>
+                <span id="currentSidePriceDiff" class="text-sm font-bold text-neutral-700">+0원</span>
+              </div>
+
+              <!-- 200% 크기 확대된 [사이드 변경하기] 버튼 -->
+              <button onclick="openSideSelectModal()" class="w-full h-16 bg-amber-400 hover:bg-yellow-400 active:scale-98 border-2 border-amber-600 rounded-xl font-black text-lg text-neutral-950 flex items-center justify-center space-x-2 shadow-md transition">
+                <i class="fas fa-exchange-alt text-xl text-neutral-900"></i>
+                <span>다른 사이드로 바꾸기 (치즈스틱 등)</span>
+              </button>
+            </div>
+
+            <!-- 음료 구성 (간략화) -->
+            <div class="bg-neutral-50 border-2 border-neutral-200 rounded-2xl p-3 flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="text-3xl">🥤</span>
+                <div>
+                  <span class="text-xs text-neutral-500">선택된 음료</span>
+                  <h5 class="text-base font-bold text-neutral-800">코카콜라 M (기본)</h5>
+                </div>
+              </div>
+              <span class="text-xs text-neutral-400">변경 없음</span>
+            </div>
+
+            <!-- 최종 가격 표시 -->
+            <div class="bg-neutral-900 text-white rounded-2xl p-4 flex items-center justify-between">
+              <span class="text-base font-bold">주문 합계 금액</span>
+              <div class="flex items-baseline space-x-1">
+                <span id="modalTotalPrice" class="text-3xl font-black text-mcdYellow">6,900</span>
+                <span class="text-base font-bold">원</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 하단 담기 버튼 -->
+          <div class="p-4 bg-white border-t border-neutral-200">
+            <button onclick="addToCartAndGoNext()" class="w-full h-16 bg-mcdGreen hover:bg-emerald-700 active:scale-98 text-white rounded-2xl font-black text-xl flex items-center justify-center space-x-2 shadow-lg transition">
+              <i class="fas fa-shopping-cart"></i>
+              <span>이 구성으로 장바구니에 담기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- [서브 모달] 사이드 메뉴 교체 선택 팝업 -->
+      <!-- 치즈스틱 원클릭 선택 -->
+      <!-- ============================================== -->
+      <div id="sideSelectModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h4 class="text-xl font-black text-neutral-900">원하시는 사이드 선택</h4>
+            <button onclick="closeSideSelectModal()" class="text-neutral-500 hover:text-black">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <!-- 1. 감자튀김 -->
+            <button onclick="changeSideOption('후렌치 후라이 (감자튀김)', 0, '🍟')" class="w-full p-4 border-2 border-neutral-300 hover:border-amber-500 rounded-2xl flex items-center justify-between text-left">
+              <div class="flex items-center space-x-3">
+                <span class="text-3xl">🍟</span>
+                <div>
+                  <h5 class="text-lg font-black text-neutral-900">후렌치 후라이 M</h5>
+                  <p class="text-xs text-neutral-500">바삭한 맥도날드 기본 감자</p>
+                </div>
+              </div>
+              <span class="text-base font-bold text-neutral-600">+0원</span>
+            </button>
+
+            <!-- 2. 골든 모짜렐라 치즈스틱 (손주가 원한 핵심 변경 메뉴) -->
+            <button onclick="changeSideOption('골든 모짜렐라 치즈스틱 (2조각)', 500, '🧀')" class="w-full p-4 border-4 border-amber-500 bg-amber-50 hover:bg-yellow-100 rounded-2xl flex items-center justify-between text-left shadow-md">
+              <div class="flex items-center space-x-3">
+                <span class="text-3xl">🧀</span>
+                <div>
+                  <div class="flex items-center space-x-1">
+                    <span class="bg-mcdRed text-white text-xs font-black px-1.5 py-0.2 rounded">인기</span>
+                    <h5 class="text-lg font-black text-neutral-900">치즈스틱 2조각</h5>
+                  </div>
+                  <p class="text-xs text-amber-900 font-medium">쭉 늘어나는 고소한 치즈</p>
+                </div>
+              </div>
+              <span class="text-base font-black text-mcdRed">+500원</span>
+            </button>
+
+            <!-- 3. 코울슬로 -->
+            <button onclick="changeSideOption('코울슬로', 0, '🥗')" class="w-full p-4 border-2 border-neutral-300 hover:border-amber-500 rounded-2xl flex items-center justify-between text-left">
+              <div class="flex items-center space-x-3">
+                <span class="text-3xl">🥗</span>
+                <div>
+                  <h5 class="text-lg font-black text-neutral-900">코울슬로</h5>
+                  <p class="text-xs text-neutral-500">아삭하고 상큼한 양배추</p>
+                </div>
+              </div>
+              <span class="text-base font-bold text-neutral-600">+0원</span>
+            </button>
+          </div>
+
+          <button onclick="closeSideSelectModal()" class="w-full h-12 bg-neutral-200 text-neutral-800 rounded-xl font-bold">
+            선택 취소
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- [화면 5] 장바구니 확인 & 즉시 결제 진입 (Req 2 해결!) -->
+      <!-- 개선: 추천 팝업 전면 제거, 테이블 번호 생략하고 카운터 수령 기본값 안내 -->
+      <!-- ============================================== -->
+      <section id="screen-cart" class="screen-view hidden flex-1 flex flex-col justify-between p-5">
+        <div class="space-y-4">
+          <!-- 상단 헤더 -->
+          <div class="border-b pb-2">
+            <span class="text-xs font-bold text-mcdGreen bg-emerald-100 px-3 py-1 rounded-full">주문 확인</span>
+            <h2 class="text-2xl font-black text-neutral-900 mt-1">내가 고른 메뉴 확인</h2>
+          </div>
+
+          <!-- 담긴 메뉴 카드 리스트 -->
+          <div class="bg-white border-2 border-neutral-300 rounded-2xl p-4 shadow-sm space-y-3">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="text-4xl">🍔</span>
+                <div>
+                  <h4 class="text-xl font-black text-neutral-900">빅맥® 세트</h4>
+                  <div class="mt-1 space-y-0.5">
+                    <span id="cartSideTag" class="inline-block bg-amber-400 text-neutral-950 text-xs font-black px-2 py-0.5 rounded shadow-sm">
+                      🧀 사이드: 치즈스틱 2조각 변경 (+500원)
+                    </span>
+                    <p class="text-xs text-neutral-500">음료: 코카콜라 M</p>
+                  </div>
+                </div>
+              </div>
+              <span id="cartItemPrice" class="text-xl font-black text-neutral-900">7,400원</span>
+            </div>
+          </div>
+
+          <!-- 핵심 개선 2: 부가 서비스(테이블 서비스) 패닉 해소 배너 (C03 해결) -->
+          <!-- 복잡한 진동벨 번호 입력 대신 '카운터 직접 수령' 자동 기본값 설정 -->
+          <div class="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 shadow-sm space-y-2">
+            <div class="flex items-center space-x-2 text-emerald-800">
+              <i class="fas fa-check-circle text-xl"></i>
+              <span class="text-sm font-black">음식 받는 곳 자동 지정 (간편 수령)</span>
+            </div>
+            <p class="text-sm font-bold text-neutral-900">
+              📍 결제 후 <span class="text-mcdRed font-black text-base">[1번 카운터]</span>에서 음식을 바로 준비해 드립니다.
+            </p>
+            <p class="text-xs text-neutral-600">
+              진동벨 번호 입력 등 복잡한 단계 없이 바로 카드로 계산하실 수 있습니다.
+            </p>
+
+            <!-- 이동약자(거동 불편 고령자)를 위한 반대 사례 배려 옵션 유지 -->
+            <div class="pt-2 border-t border-emerald-200 flex justify-between items-center text-xs">
+              <span class="text-neutral-500">다리가 불편하여 자리로 배달을 원하시나요?</span>
+              <button onclick="toggleTableServiceOption()" class="font-bold text-emerald-700 underline hover:text-emerald-900">
+                직원 배달 요청
+              </button>
+            </div>
+          </div>
+
+          <!-- 불필요한 추천 메뉴 안내 제거 뱃지 -->
+          <div class="text-center text-xs text-neutral-500">
+            불필요한 추가 구매 유도 화면 없이 곧바로 결제로 이어집니다.
+          </div>
+        </div>
+
+        <!-- 하단 총액 & 결제 진행 버튼 -->
+        <div class="space-y-3 pt-4 border-t border-neutral-200">
+          <div class="flex justify-between items-baseline px-2">
+            <span class="text-lg font-bold text-neutral-700">최종 결제 금액</span>
+            <div class="flex items-baseline space-x-1">
+              <span id="cartTotalPrice" class="text-4xl font-black text-mcdRed">7,400</span>
+              <span class="text-xl font-black text-neutral-900">원</span>
+            </div>
+          </div>
+
+          <div class="flex space-x-3">
+            <button onclick="goToScreen('screen-menu-list')" class="w-1/3 h-16 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-black text-lg flex items-center justify-center space-x-1">
+              <i class="fas fa-arrow-left"></i>
+              <span>이전</span>
+            </button>
+            <button onclick="startPayment()" class="w-2/3 h-16 bg-mcdRed hover:bg-red-700 active:scale-98 text-white rounded-2xl font-black text-xl flex items-center justify-center space-x-2 shadow-xl animate-pulse-slow">
+              <i class="fas fa-credit-card"></i>
+              <span>신용카드 결제하기</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- [화면 6] 신용카드 결제 화면 (다감각 피드백 & 모의 투입) -->
+      <!-- 개선: IC칩 방향 시각 모션 그래픽 + 오류 방지 음성 피드백 -->
+      <!-- ============================================== -->
+      <section id="screen-payment" class="screen-view hidden flex-1 flex flex-col justify-between p-6 text-center">
+        <div class="space-y-1">
+          <span class="text-xs font-bold text-mcdRed bg-red-100 px-3 py-1 rounded-full">마지막 단계 : 결제</span>
+          <h2 class="text-2xl font-black text-neutral-900 mt-2">신용카드를 넣어주세요</h2>
+          <p class="text-sm font-semibold text-neutral-600">카드의 <b class="text-amber-600">노란색 금색 칩</b>이 앞으로 오도록 꽂아주세요</p>
+        </div>
+
+        <!-- 카드 투입 모션 그래픽 일러스트 -->
+        <div class="my-auto py-4 flex flex-col items-center justify-center space-y-4">
+          <!-- 카드 리더기 투입구 형상 -->
+          <div class="w-64 h-6 bg-neutral-800 rounded-full border-2 border-neutral-600 flex items-center justify-center relative shadow-inner">
+            <div class="w-48 h-2 bg-neutral-950 rounded-full"></div>
+            <!-- 초록색 점멸 LED -->
+            <span class="absolute -right-2 top-0.5 w-4 h-4 bg-emerald-500 rounded-full animate-ping"></span>
+            <span class="absolute -right-2 top-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></span>
+          </div>
+
+          <!-- 카드 모션 (금색 IC칩 강조) -->
+          <div class="card-inserting w-48 h-32 bg-gradient-to-tr from-blue-700 to-indigo-900 rounded-2xl shadow-2xl p-3 border-2 border-blue-400 relative text-left text-white">
+            <!-- 금색 IC칩 시각적 강조 -->
+            <div class="w-10 h-8 bg-amber-300 rounded border-2 border-amber-500 shadow-md flex items-center justify-center text-[10px] font-mono text-amber-900 font-bold animate-pulse">
+              칩(앞)
+            </div>
+            <div class="absolute bottom-3 left-3 text-xs tracking-widest font-mono text-blue-200">
+              •••• •••• •••• 1024
+            </div>
+            <div class="absolute bottom-3 right-3 text-lg text-white">
+              <i class="fab fa-cc-visa"></i>
+            </div>
+          </div>
+
+          <!-- 다감각 안내 메시지 박스 -->
+          <div id="paymentFeedbackBox" class="bg-amber-100 border-2 border-amber-400 rounded-2xl p-3 text-sm font-bold text-neutral-900 w-full max-w-sm">
+            🔊 "카드의 금색 칩이 위/앞을 향하도록 끝까지 꽂아주세요"
+          </div>
+        </div>
+
+        <!-- 모의 테스트 인터랙션 버튼 (UT 테스트용) -->
+        <div class="space-y-3">
+          <div class="text-xs text-neutral-500 font-medium">사용성 테스트를 위해 아래 버튼을 눌러주세요</div>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <!-- 1. 정방향 올바른 투입 -->
+            <button onclick="simulateCardInsert(true)" class="h-14 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-black text-sm flex items-center justify-center space-x-1 shadow">
+              <i class="fas fa-check"></i>
+              <span>[올바름] IC칩 투입</span>
+            </button>
+            <!-- 2. 역방향 오류 투입 시뮬레이션 (피드백 검증용) -->
+            <button onclick="simulateCardInsert(false)" class="h-14 bg-neutral-700 hover:bg-neutral-800 active:scale-95 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1 shadow">
+              <i class="fas fa-redo"></i>
+              <span>[오류] 반대로 투입</span>
+            </button>
+          </div>
+
+          <!-- 이전으로 돌아가기 (안전 확인 모달 적용) -->
+          <button onclick="confirmCancelPayment()" class="w-full h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-xl font-bold text-sm">
+            취소하고 장바구니로 돌아가기
+          </button>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- [화면 7] 주문 완료 및 영수증 화면 (Screen 7: Complete) -->
+      <!-- 대형 주문번호 & HCI 성과 지표 요약 -->
+      <!-- ============================================== -->
+      <section id="screen-complete" class="screen-view hidden flex-1 flex flex-col justify-between p-6 text-center">
+        <div class="space-y-2 pt-2">
+          <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
+            <i class="fas fa-check"></i>
+          </div>
+          <h2 class="text-2xl font-black text-neutral-900">결제가 완료되었습니다!</h2>
+          <p class="text-sm font-semibold text-neutral-600">신용카드와 영수증을 잊지 말고 챙겨주세요</p>
+        </div>
+
+        <!-- 주문번호 대형 표기 (시인성 극대화) -->
+        <div class="my-auto bg-white border-4 border-amber-400 rounded-3xl p-6 shadow-xl space-y-3">
+          <span class="text-sm font-bold text-neutral-500">고객님의 주문번호</span>
+          <div class="text-6xl font-black text-mcdRed tracking-wider font-mono">
+            234
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm font-bold text-neutral-800">
+            📍 <b class="text-mcdRed">1번 카운터</b> 전광판에 <b>234번</b>이 뜨면<br>음식을 수령해 가시면 됩니다.
+          </div>
+        </div>
+
+        <!-- HCI 사용성 개선 결과 리포트 박스 -->
+        <div class="bg-neutral-900 text-white rounded-2xl p-4 text-left space-y-2 text-xs">
+          <div class="flex items-center justify-between text-mcdYellow font-black text-sm">
+            <span>📊 HCI 사용성 개선 성과 측정</span>
+            <span>달성 완료 ✓</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-neutral-700">
+            <div>
+              <span class="text-neutral-400">결제 소요 시간:</span>
+              <p id="resultTime" class="text-base font-black text-emerald-400">26초 (목표 달성)</p>
+            </div>
+            <div>
+              <span class="text-neutral-400">루프 단절(재시도):</span>
+              <p class="text-base font-black text-emerald-400">0회 (완전 해결)</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-neutral-400">
+            * 기존 키오스크 대비 결제 시간 32초 단축, 테이블 번호 패닉 원천 차단
+          </p>
+        </div>
+
+        <!-- 처음으로 버튼 & 자동 카운트다운 -->
+        <div class="space-y-2">
+          <button onclick="resetToHome()" class="w-full h-16 bg-mcdYellow hover:bg-yellow-400 text-neutral-950 rounded-2xl font-black text-xl shadow-lg">
+            처음 화면으로 돌아가기 (<span id="autoResetTimer">15</span>초)
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 결제 중 로딩 스피너 오버레이 -->
+    <div id="loadingOverlay" class="hidden absolute inset-0 bg-black/75 z-50 flex flex-col items-center justify-center p-6 text-white text-center">
+      <div class="w-16 h-16 border-4 border-mcdYellow border-t-transparent rounded-full animate-spin mb-4"></div>
+      <h3 class="text-2xl font-black">신용카드 승인 처리 중입니다</h3>
+      <p class="text-sm text-neutral-300 mt-2">카드를 뽑지 마시고 잠시만 기다려 주세요...</p>
+    </div>
+
+  </div>
+
+  <!-- ============================================== -->
+  <!-- [HCI 개선점 안내 모달] 과제 평가자/교수용 정보창 -->
+  <!-- ============================================== -->
+  <div id="infoModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="bg-mcdRed text-white p-4 flex justify-between items-center">
+        <h3 class="text-lg font-black flex items-center space-x-2">
+          <i class="fas fa-graduation-cap text-mcdYellow"></i>
+          <span>HCI 과제: 맥도날드 키오스크 개선 요약</span>
+        </h3>
+        <button onclick="closeInfoModal()" class="text-white hover:text-yellow-300 text-xl font-bold">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs text-neutral-800 leading-relaxed">
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded">
+          <b class="text-neutral-900 text-sm">과제명: 맥도날드 주문 키오스크의 고령 사용자 경험 개선</b><br>
+          작성자: 박진성 (학번: 223610) / 휴먼컴퓨터인터페이스
+        </div>
+
+        <div>
+          <h4 class="font-bold text-neutral-900 text-sm mb-1">🎯 해결한 3대 핵심 문제점 (관찰 근거)</h4>
+          <ul class="list-disc list-inside space-y-1 text-neutral-700">
+            <li><b>E01/C01 (시작 지연)</b>: 광고가 화면 전체를 지배하여 주문하기 버튼을 못 찾음 → 광고 25% 축소, 중앙 초대형 펄스 버튼 배치</li>
+            <li><b>E02/C02 (사이드 변경 루프)</b>: 작은 텍스트 버튼으로 지나쳤다가 장바구니 비우고 재주문 → 변경 버튼 200% 확대 및 강조 테두리 적용</li>
+            <li><b>E03/C03 (결제 루프 단절)</b>: 결제 직전 테이블 번호 입력 화면에서 당황하여 '이전' 연타 → '카운터 수령' 기본값 자동 직행 처리</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-neutral-900 text-sm mb-1">📈 목표 검증 지표</h4>
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="bg-neutral-100 p-2 rounded-xl">
+              <span class="text-neutral-500">결제 시간</span><br>
+              <b class="text-sm text-mcdRed">58초 → 30초 이하</b>
+            </div>
+            <div class="bg-neutral-100 p-2 rounded-xl">
+              <span class="text-neutral-500">결제 재시도</span><br>
+              <b class="text-sm text-mcdRed">평균 0.8회 → 0.2회 이하</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t pt-3 text-neutral-500">
+          * GitHub 저장소: <a href="https://github.com/lTvTl/uiux-improvement-prototype-mcdonald-korea-kiosks.git" target="_blank" class="text-blue-600 underline">uiux-improvement-prototype-mcdonald-korea-kiosks</a>
+        </div>
+      </div>
+
+      <div class="p-3 bg-neutral-100 border-t text-right">
+        <button onclick="closeInfoModal()" class="px-5 py-2 bg-neutral-800 text-white rounded-xl font-bold text-xs">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- JavaScript 인터랙션 & 상태 머신 스크립트 -->
+  <!-- ============================================== -->
+  <script>
+    // 음성 및 사운드 효과 (Web Audio API)
+    let isSoundOn = true;
+    let audioCtx = null;
+
+    function playBeep(freq = 440, duration = 0.15, type = 'sine') {
+      if (!isSoundOn) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log('Audio not supported or blocked', e);
+      }
+    }
+
+    function toggleSound() {
+      isSoundOn = !isSoundOn;
+      const icon = document.getElementById('soundIcon');
+      const text = document.getElementById('soundText');
+      if (isSoundOn) {
+        icon.className = 'fas fa-volume-up text-mcdYellow';
+        text.innerText = '음성 켜짐';
+        playBeep(600, 0.1);
+      } else {
+        icon.className = 'fas fa-volume-mute text-neutral-400';
+        text.innerText = '음성 꺼짐';
+      }
+    }
+
+    // 과업 측정 타이머
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    let isTimerRunning = false;
+
+    function startTimer() {
+      if (isTimerRunning) return;
+      isTimerRunning = true;
+      elapsedSeconds = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+        const secs = String(elapsedSeconds % 60).padStart(2, '0');
+        document.getElementById('taskTimer').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      isTimerRunning = false;
+      clearInterval(timerInterval);
+      return elapsedSeconds;
+    }
+
+    // 주문 상태 변수
+    let selectedOrderType = '매장 식사';
+    let basePrice = 6900;
+    let currentSidePrice = 0;
+    let currentSideName = '후렌치 후라이 (감자튀김)';
+    let currentSideIcon = '🍟';
+    let cart = [];
+
+    // 화면 전환 함수
+    function goToScreen(screenId) {
+      playBeep(520, 0.08);
+      document.querySelectorAll('.screen-view').forEach(s => s.classList.add('hidden'));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.remove('hidden');
+      }
+
+      // 시작 화면에서 벗어날 때 타이머 시작
+      if (screenId !== 'screen-start' && !isTimerRunning) {
+        startTimer();
+      }
+    }
+
+    // 식사 장소 선택
+    function selectOrderType(type) {
+      selectedOrderType = type;
+      goToScreen('screen-menu-list');
+    }
+
+    // 옵션 모달 제어
+    function openOptionModal(menuName, price) {
+      basePrice = price;
+      // 기본값 리셋
+      currentSidePrice = 0;
+      currentSideName = '후렌치 후라이 (감자튀김)';
+      currentSideIcon = '🍟';
+      updateModalDisplay();
+      document.getElementById('optionModal').classList.remove('hidden');
+      playBeep(580, 0.1);
+    }
+
+    function closeOptionModal() {
+      document.getElementById('optionModal').classList.add('hidden');
+      playBeep(350, 0.1);
+    }
+
+    function updateModalDisplay() {
+      document.getElementById('currentSideName').innerText = currentSideName;
+      document.getElementById('currentSideIcon').innerText = currentSideIcon;
+      document.getElementById('currentSidePriceDiff').innerText = `+${currentSidePrice.toLocaleString()}원`;
+      const total = basePrice + currentSidePrice;
+      document.getElementById('modalTotalPrice').innerText = total.toLocaleString();
+    }
+
+    // 사이드 교체 서브모달
+    function openSideSelectModal() {
+      document.getElementById('sideSelectModal').classList.remove('hidden');
+      playBeep(650, 0.1);
+    }
+
+    function closeSideSelectModal() {
+      document.getElementById('sideSelectModal').classList.add('hidden');
+    }
+
+    function changeSideOption(sideName, priceDiff, icon) {
+      currentSideName = sideName;
+      currentSidePrice = priceDiff;
+      currentSideIcon = icon;
+      updateModalDisplay();
+      closeSideSelectModal();
+      playBeep(780, 0.15);
+    }
+
+    // 장바구니 담기
+    function addToCartAndGoNext() {
+      closeOptionModal();
+      const finalPrice = basePrice + currentSidePrice;
+      
+      // 장바구니 화면 업데이트
+      document.getElementById('cartSideTag').innerText = `${currentSideIcon} 사이드: ${currentSideName} (+${currentSidePrice}원)`;
+      document.getElementById('cartItemPrice').innerText = `${finalPrice.toLocaleString()}원`;
+      document.getElementById('cartTotalPrice').innerText = `${finalPrice.toLocaleString()}`;
+      document.getElementById('bottomCartCount').innerText = '1 개';
+      
+      goToScreen('screen-cart');
+      playBeep(880, 0.2);
+    }
+
+    // 결제 진입
+    function startPayment() {
+      goToScreen('screen-payment');
+      playBeep(520, 0.1);
+    }
+
+    // 카드 결제 시뮬레이션
+    function simulateCardInsert(isValid) {
+      const feedbackBox = document.getElementById('paymentFeedbackBox');
+      
+      if (isValid) {
+        // 정방향 정상 투입
+        playBeep(880, 0.15);
+        feedbackBox.className = 'bg-emerald-100 border-2 border-emerald-500 rounded-2xl p-3 text-sm font-black text-emerald-900 w-full max-w-sm';
+        feedbackBox.innerText = '✓ 카드가 올바르게 인식되었습니다. 승인 진행 중...';
+
+        // 승인 로딩 오버레이
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+
+        setTimeout(() => {
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          const finalSec = stopTimer();
+          document.getElementById('resultTime').innerText = `${finalSec}초 (목표 달성)`;
+          goToScreen('screen-complete');
+          playBeep(1046, 0.3); // 성공 팡파레 톤
+          startAutoResetCountdown();
+        }, 1600);
+
+      } else {
+        // 역방향 투입 오류 시뮬레이션 (경고 비프음)
+        playBeep(220, 0.35, 'sawtooth');
+        feedbackBox.className = 'bg-red-100 border-2 border-red-500 rounded-2xl p-3 text-sm font-black text-red-900 w-full max-w-sm animate-bounce-subtle';
+        feedbackBox.innerText = '⚠️ 카드가 반대로 들어갔습니다! 금색 칩이 앞으로 향하도록 돌려 넣어주세요.';
+      }
+    }
+
+    // 결제 취소 확인 (루프 단절 방지)
+    function confirmCancelPayment() {
+      if (confirm('주문 내역이 장바구니에 안전하게 보관되어 있습니다. 장바구니 화면으로 돌아가시겠습니까?')) {
+        goToScreen('screen-cart');
+      }
+    }
+
+    // 테이블 서비스 토글 (이동약자 옵션)
+    function toggleTableServiceOption() {
+      alert('[자리 배달 요청]\n카운터에 자리 번호(테이블 텐트)를 요청하시면 직원이 직접 자리로 음식을 서빙해 드립니다.');
+    }
+
+    // 완료 화면 자동 초기화 타이머
+    let resetTimerInterval = null;
+    function startAutoResetCountdown() {
+      let count = 15;
+      document.getElementById('autoResetTimer').innerText = count;
+      clearInterval(resetTimerInterval);
+      resetTimerInterval = setInterval(() => {
+        count--;
+        document.getElementById('autoResetTimer').innerText = count;
+        if (count <= 0) {
+          clearInterval(resetTimerInterval);
+          resetToHome();
+        }
+      }, 1000);
+    }
+
+    function resetToHome() {
+      clearInterval(resetTimerInterval);
+      stopTimer();
+      document.getElementById('taskTimer').innerText = '00:00';
+      document.getElementById('bottomCartCount').innerText = '0 개';
+      goToScreen('screen-start');
+    }
+
+    // 직원 호출 알림
+    function callStaffAlert() {
+      playBeep(800, 0.25);
+      alert('🔔 직원을 호출했습니다. 친절한 직원이 곧 고객님께 다가가 주문을 도와드리겠습니다.');
+    }
+
+    // HCI 비교 모달 제어
+    function openInfoModal() {
+      document.getElementById('infoModal').classList.remove('hidden');
+      playBeep(440, 0.08);
+    }
+
+    function closeInfoModal() {
+      document.getElementById('infoModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
