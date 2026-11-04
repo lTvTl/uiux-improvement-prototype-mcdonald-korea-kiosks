@@ -57,3 +57,24 @@
 
 ### 웹사이트 접속
 - GitHub Pages 배포 링크: [https://ltvtl.github.io/uiux-improvement-prototype-mcdonald-korea-kiosks/](https://ltvtl.github.io/uiux-improvement-prototype-mcdonald-korea-kiosks/)
+
+---
+
+## 6. 정상 인터랙션 스토리보드 및 시연 영상 (Storyboard & Video)
+
+본 프로젝트의 정상 과업 흐름(Happy Path: 7단계 완결)을 실제 구현된 UI와 100% 동일하게 시각화한 고해상도 단일 스토리보드 이미지 및 주문 시연 동영상입니다:
+- **실제 주문 과정 시연 영상 (MP4)**: [kiosk_order_simulation.mp4](kiosk_order_simulation.mp4) (960×1040 30fps, 약 24초)
+- **스토리보드 이미지 파일**: [storyboard_interaction_flow.png](storyboard_interaction_flow.png) (3840×2280 4K UHD)
+- **스토리보드 웹 템플릿**: [storyboard.html](storyboard.html)
+
+---
+
+## 7. 평가 기준별 상세 보고서 안내
+
+본 프로토타입의 기획-분석-설계-구현-배포 전 과정에 대한 평가 기준별 종합 보고서는 아래 파일에서 상세히 확인하실 수 있습니다:
+- **평가 기준별 상세 보고서**: [223610_박진성_프로젝트설명_및_주요기능요약.md](223610_박진성_프로젝트설명_및_주요기능요약.md)
+  1. 기획 내용과 구현 결과의 일치성 (100% 매핑)
+  2. 주요 기능의 구현 및 정상 작동 여부 (Critical Path 7단계 및 맞춤 모달 완벽 동작)
+  3. 사용자 인터페이스와 디자인의 완성도 (HCI 6대 원칙, 유니버설 디자인, 쉬운 한국어 순화)
+  4. 프롬프트의 구체성 및 개선 과정의 적절성 (10단계 점진적 개발 및 AI 통제)
+  5. 소스 코드와 결과물의 공유 및 제출 자료의 충실성 (GitHub 배포, 무설치 독립 실행, 전 과정 추적성)
